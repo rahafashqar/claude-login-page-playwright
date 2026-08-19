@@ -12,11 +12,11 @@ test.describe('Login Page Tests', () => {
   });
 
   test('Login Validation', async ({ page }) => {
-  await page.goto('');
-  await page.getByRole('button', { name: 'Unlock Vault' }).click();
+    await page.goto('');
+    await page.getByRole('button', { name: 'Unlock Vault' }).click();
 
-  await expect(page.getByText(/email.*required/i)).toBeVisible();
-  await expect(page.getByText(/password.*required/i)).toBeVisible();
-});
+    await expect(page.getByText(/email.*required/i)).toBeVisible();
+    await expect(page.getByText(/password.*required/i)).toBeVisible();
+  });
 
 });
