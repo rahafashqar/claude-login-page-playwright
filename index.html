@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Night Vault — Sign In</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0a0c12;
+    --bg-soft: #0e1119;
+    --surface: #12151e;
+    --surface-2: #171b26;
+    --border: #242938;
+    --border-soft: #1b1f2c;
+    --text: #eceef3;
+    --text-muted: #8a90a6;
+    --text-faint: #565c72;
+    --accent: #e8a33d;
+    --accent-dim: #b57e2e;
+    --accent-soft: rgba(232, 163, 61, 0.14);
+    --error: #ff6b6b;
+    --error-soft: rgba(255, 107, 107, 0.12);
+    --success: #58d68d;
+    --radius-lg: 20px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'IBM Plex Sans', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+    --ease: cubic-bezier(.22,.9,.32,1);
+  }
+
+  *{ box-sizing: border-box; }
+  html, body{ height: 100%; }
+  body{
+    margin: 0;
+    font-family: var(--font-body);
+    background: radial-gradient(120% 140% at 15% 0%, #12151f 0%, #0a0c12 55%, #060709 100%);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  body::before{
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.35) 0, transparent 100%),
+      radial-gradient(1px 1px at 70% 65%, rgba(255,255,255,0.25) 0, transparent 100%),
+      radial-gradient(1px 1px at 85% 20%, rgba(255,255,255,0.3) 0, transparent 100%),
+      radial-gradient(1px 1px at 40% 80%, rgba(255,255,255,0.2) 0, transparent 100%),
+      radial-gradient(1px 1px at 55% 10%, rgba(255,255,255,0.25) 0, transparent 100%);
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  .scene{ width: 100%; display: flex; align-items: center; justify-content: center; }
+
+  /* ---------- shared shell ---------- */
+  .auth-shell, .success-shell{
+    width: 100%;
+    max-width: 920px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    overflow: hidden;
+    box-shadow: 0 30px 80px -20px rgba(0,0,0,0.6);
+    animation: rise .6s var(--ease) both;
+  }
+
+  @keyframes rise{
+    from{ opacity: 0; transform: translateY(18px) scale(.985); }
+    to{ opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .auth-shell.shake{ animation: shake .42s var(--ease); }
+  @keyframes shake{
+    10%, 90% { transform: translateX(-1px); }
+    20%, 80% { transform: translateX(3px); }
+    30%, 50%, 70% { transform: translateX(-6px); }
+    40%, 60% { transform: translateX(6px); }
+  }
+
+  /* ---------- visual side panel ---------- */
+  .visual-panel{
+    position: relative;
+    background:
+      radial-gradient(circle at 50% 42%, #1a1e2b 0%, #12151e 55%, #0c0e15 100%);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 30px;
+    min-height: 560px;
+  }
+
+  .dial{
+    position: relative;
+    width: 220px;
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .dial-ring{
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 1px dashed var(--border);
+    animation: spin 40s linear infinite;
+  }
+  .dial-ring.inner{ inset: 22px; border-style: solid; border-color: var(--border-soft); animation-duration: 60s; animation-direction: reverse; }
+
+  @keyframes spin{ to{ transform: rotate(360deg); } }
+
+  .dial-glow{
+    position: absolute;
+    inset: 40px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--accent-soft) 0%, transparent 70%);
+    filter: blur(4px);
+    animation: pulse 3.2s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%, 100%{ opacity: .55; transform: scale(1); }
+    50%{ opacity: 1; transform: scale(1.06); }
+  }
+
+  .lock-icon{ position: relative; z-index: 2; width: 84px; height: 84px; }
+  .lock-shackle{ transform-origin: 42px 40px; transition: transform .5s var(--ease); }
+  .unlocking .lock-shackle{ transform: rotate(-28deg) translateX(-6px); }
+
+  .visual-copy{ text-align: center; margin-top: 34px; max-width: 260px; }
+  .visual-copy .eyebrow{ display: block; margin-bottom: 10px; }
+  .visual-copy p{
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+
+  .eyebrow{
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  /* ---------- form panel ---------- */
+  .form-panel{ padding: 48px 44px; display: flex; flex-direction: column; justify-content: center; }
+  .brand{ margin-bottom: 18px; }
+  .form-panel h1{
+    font-family: var(--font-display);
+    font-size: 30px;
+    font-weight: 600;
+    margin: 6px 0 8px;
+    letter-spacing: -0.01em;
+  }
+  .subtext{ margin: 0 0 28px; color: var(--text-muted); font-size: 14.5px; }
+
+  form{ display: flex; flex-direction: column; gap: 20px; }
+
+  .field{ display: flex; flex-direction: column; gap: 8px; }
+  .field label{
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .field input{
+    width: 100%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 13px 14px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14.5px;
+    outline: none;
+    transition: border-color .18s var(--ease), box-shadow .18s var(--ease), background .18s var(--ease);
+  }
+  .field input::placeholder{ color: var(--text-faint); }
+  .field input:hover{ border-color: #3a4157; }
+  .field input:focus{
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+    background: #141822;
+  }
+  .field.invalid input{
+    border-color: var(--error);
+    box-shadow: 0 0 0 3px var(--error-soft);
+  }
+
+  .password-wrap{ position: relative; display: flex; align-items: center; }
+  .password-wrap input{ padding-right: 44px; }
+  .eye-btn{
+    position: absolute;
+    right: 6px;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: var(--text-faint);
+    cursor: pointer;
+    transition: color .15s var(--ease), background .15s var(--ease);
+  }
+  .eye-btn:hover{ color: var(--text); background: rgba(255,255,255,0.05); }
+  .eye-btn:focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; }
+  .eye-btn svg{ width: 19px; height: 19px; }
+
+  .error-msg{
+    display: block;
+    font-size: 12.5px;
+    color: var(--error);
+    min-height: 0;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height .22s var(--ease), opacity .18s var(--ease), margin .22s var(--ease);
+  }
+  .error-msg.show{ max-height: 40px; opacity: 1; margin-top: -2px; }
+
+  .banner-error{
+    display: none;
+    font-size: 13px;
+    color: var(--error);
+    background: var(--error-soft);
+    border: 1px solid rgba(255,107,107,0.35);
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+  }
+  .banner-error.show{ display: block; }
+
+  .submit-btn{
+    margin-top: 4px;
+    width: 100%;
+    padding: 14px 16px;
+    background: linear-gradient(180deg, #f0b256, var(--accent));
+    color: #221604;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 15px;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: transform .15s var(--ease), box-shadow .15s var(--ease), filter .15s var(--ease);
+    box-shadow: 0 10px 24px -8px rgba(232,163,61,0.45);
+  }
+  .submit-btn:hover{ filter: brightness(1.06); transform: translateY(-1px); }
+  .submit-btn:active{ transform: translateY(0); }
+  .submit-btn:focus-visible{ outline: 2px solid var(--text); outline-offset: 3px; }
+  .submit-btn:disabled{ opacity: .7; cursor: default; transform: none; }
+
+  .spinner{
+    width: 15px; height: 15px;
+    border-radius: 50%;
+    border: 2px solid rgba(34,22,4,0.35);
+    border-top-color: #221604;
+    animation: spin-btn .6s linear infinite;
+    display: none;
+  }
+  @keyframes spin-btn{ to{ transform: rotate(360deg); } }
+  .submit-btn.loading .spinner{ display: inline-block; }
+  .submit-btn.loading .btn-label{ opacity: .8; }
+
+  .hint{
+    margin: 4px 0 0;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--text-faint);
+    text-align: center;
+    line-height: 1.6;
+  }
+  .hint code{
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 1px 6px;
+    border-radius: 4px;
+    color: var(--text-muted);
+  }
+
+  /* ---------- success view ---------- */
+  .success-shell{
+    grid-template-columns: 1fr;
+    padding: 64px 48px;
+    text-align: center;
+    align-items: center;
+    justify-items: center;
+    min-height: 480px;
+  }
+  .success-badge{
+    width: 76px; height: 76px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(88,214,141,0.18), transparent 70%);
+    border: 1px solid rgba(88,214,141,0.4);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 26px;
+    animation: pop .5s var(--ease) both .1s;
+  }
+  @keyframes pop{ from{ opacity: 0; transform: scale(.7); } to{ opacity: 1; transform: scale(1); } }
+  .success-badge svg{ width: 34px; height: 34px; }
+
+  .success-shell h1{
+    font-family: var(--font-display);
+    font-size: 32px;
+    margin: 0 0 10px;
+  }
+  .success-shell p{ color: var(--text-muted); font-size: 15px; margin: 0 0 32px; max-width: 380px; }
+
+  .session-card{
+    width: 100%;
+    max-width: 360px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px 18px;
+    text-align: left;
+    margin-bottom: 30px;
+  }
+  .session-row{ display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
+  .session-row + .session-row{ border-top: 1px solid var(--border-soft); }
+  .session-row span:first-child{ color: var(--text-faint); font-family: var(--font-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+  .session-row span:last-child{ color: var(--text); }
+
+  .logout-btn{
+    padding: 12px 26px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 14px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: border-color .15s var(--ease), background .15s var(--ease);
+  }
+  .logout-btn:hover{ border-color: var(--accent); background: var(--accent-soft); }
+  .logout-btn:focus-visible{ outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  /* ---------- toast ---------- */
+  .toast{
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translate(-50%, -140%);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #10150f;
+    border: 1px solid rgba(88,214,141,0.4);
+    color: var(--text);
+    padding: 13px 18px;
+    border-radius: var(--radius-md);
+    font-size: 13.5px;
+    box-shadow: 0 16px 40px -12px rgba(0,0,0,0.6);
+    z-index: 50;
+    transition: transform .4s var(--ease);
+  }
+  .toast.show{ transform: translate(-50%, 0); }
+  .toast .dot{ width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 8px var(--success); flex-shrink: 0; }
+  .toast strong{ font-weight: 600; }
+  .toast-close{
+    background: none; border: none; color: var(--text-faint); cursor: pointer;
+    font-size: 15px; line-height: 1; padding: 2px 4px; margin-left: 4px;
+  }
+  .toast-close:hover{ color: var(--text); }
+
+  [hidden]{ display: none !important; }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 760px){
+    .auth-shell{ grid-template-columns: 1fr; }
+    .visual-panel{ display: none; }
+    .form-panel{ padding: 38px 26px; }
+    .success-shell{ padding: 48px 24px; }
+  }
+  @media (max-width: 420px){
+    .form-panel h1{ font-size: 25px; }
+    .toast{ left: 16px; right: 16px; transform: translateY(-140%); width: auto; }
+    .toast.show{ transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+  }
+</style>
+</head>
+<body>
+<div class="scene">
+
+  <!-- ============ LOGIN VIEW ============ -->
+  <main class="auth-shell" id="loginView">
+    <section class="visual-panel" aria-hidden="true">
+      <div class="dial" id="dial">
+        <div class="dial-ring"></div>
+        <div class="dial-ring inner"></div>
+        <div class="dial-glow"></div>
+        <svg class="lock-icon" id="lockIcon" viewBox="0 0 84 84" fill="none">
+          <rect x="18" y="36" width="48" height="36" rx="8" fill="#171b26" stroke="#e8a33d" stroke-width="2.5"/>
+          <circle cx="42" cy="54" r="4.5" fill="#e8a33d"/>
+          <rect x="40" y="54" width="4" height="10" rx="2" fill="#e8a33d"/>
+          <path class="lock-shackle" d="M28 36V28C28 18.6 34.7 12 42 12C49.3 12 56 18.6 56 28V36" stroke="#e8a33d" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="visual-copy">
+        <span class="eyebrow">Night Vault</span>
+        <p>Bank-grade darkness. Your session, sealed shut until you say otherwise.</p>
+      </div>
+    </section>
+
+    <section class="form-panel">
+      <div class="brand"><span class="eyebrow">Night Vault</span></div>
+      <h1>Enter the vault</h1>
+      <p class="subtext">Authenticate to access your dashboard.</p>
+
+      <form id="loginForm" novalidate>
+        <div class="field" id="emailField">
+          <label for="email">Email or username</label>
+          <input type="text" id="email" name="email" autocomplete="username" placeholder="you@nightvault.io">
+          <span class="error-msg" id="emailError" role="alert"></span>
+        </div>
+
+        <div class="field" id="passwordField">
+          <label for="password">Password</label>
+          <div class="password-wrap">
+            <input type="password" id="password" name="password" autocomplete="current-password" placeholder="••••••••">
+            <button type="button" class="eye-btn" id="eyeBtn" aria-label="Show password">
+              <svg id="eyeOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              <svg id="eyeClosed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" hidden>
+                <path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a18.5 18.5 0 0 1 4.22-5.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 7 11 7a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+            </button>
+          </div>
+          <span class="error-msg" id="passwordError" role="alert"></span>
+        </div>
+
+        <div class="banner-error" id="formBanner" role="alert"></div>
+
+        <button type="submit" class="submit-btn" id="submitBtn">
+          <span class="spinner"></span>
+          <span class="btn-label">Unlock Vault</span>
+        </button>
+
+        <p class="hint">Demo access — <code>demo@nightvault.io</code> / <code>Passw0rd1</code></p>
+      </form>
+    </section>
+  </main>
+
+  <!-- ============ SUCCESS VIEW ============ -->
+  <main class="success-shell" id="successView" hidden>
+    <div class="success-badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#58d68d" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 6L9 17l-5-5"/>
+      </svg>
+    </div>
+    <h1>Welcome back.</h1>
+    <p>You're inside Night Vault. Your session is encrypted and the door is sealed behind you.</p>
+    <div class="session-card">
+      <div class="session-row"><span>Signed in as</span><span id="sessionUser">—</span></div>
+      <div class="session-row"><span>Status</span><span style="color:#58d68d">Active</span></div>
+    </div>
+    <button class="logout-btn" id="logoutBtn">Lock vault &amp; sign out</button>
+  </main>
+
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <span class="dot"></span>
+  <span><strong id="toastMsg">Successfully Logged In!</strong></span>
+  <button class="toast-close" id="toastClose" aria-label="Dismiss notification">&times;</button>
+</div>
+
+<script>
+(function(){
+  const loginView = document.getElementById('loginView');
+  const successView = document.getElementById('successView');
+  const form = document.getElementById('loginForm');
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const emailField = document.getElementById('emailField');
+  const passwordField = document.getElementById('passwordField');
+  const emailError = document.getElementById('emailError');
+  const passwordError = document.getElementById('passwordError');
+  const formBanner = document.getElementById('formBanner');
+  const submitBtn = document.getElementById('submitBtn');
+  const eyeBtn = document.getElementById('eyeBtn');
+  const eyeOpen = document.getElementById('eyeOpen');
+  const eyeClosed = document.getElementById('eyeClosed');
+  const dial = document.getElementById('dial');
+  const sessionUser = document.getElementById('sessionUser');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const toast = document.getElementById('toast');
+  const toastClose = document.getElementById('toastClose');
+
+  const DEMO_EMAIL = 'demo@nightvault.io';
+  const DEMO_PASSWORD = 'Passw0rd1';
+
+  let submittedOnce = false;
+  let toastTimer = null;
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  function setFieldError(fieldEl, errorEl, message){
+    if(message){
+      fieldEl.classList.add('invalid');
+      errorEl.textContent = message;
+      errorEl.classList.add('show');
+    } else {
+      fieldEl.classList.remove('invalid');
+      errorEl.textContent = '';
+      errorEl.classList.remove('show');
+    }
+  }
+
+  function validateEmail(){
+    const val = emailInput.value.trim();
+    let message = '';
+    if(!val){
+      message = 'Email or username is required.';
+    } else if(!emailRegex.test(val)){
+      message = 'Enter a valid email address.';
+    }
+    setFieldError(emailField, emailError, message);
+    return !message;
+  }
+
+  function validatePassword(){
+    const val = passwordInput.value;
+    let message = '';
+    if(!val){
+      message = 'Password is required.';
+    } else if(val.length < 8){
+      message = 'Password must be at least 8 characters.';
+    } else if(!/[A-Z]/.test(val)){
+      message = 'Include at least 1 uppercase letter.';
+    } else if(!/[a-z]/.test(val)){
+      message = 'Include at least 1 lowercase letter.';
+    } else if(!/[0-9]/.test(val)){
+      message = 'Include at least 1 number.';
+    }
+    setFieldError(passwordField, passwordError, message);
+    return !message;
+  }
+
+  function clearBanner(){
+    formBanner.textContent = '';
+    formBanner.classList.remove('show');
+  }
+
+  function showBanner(msg){
+    formBanner.textContent = msg;
+    formBanner.classList.add('show');
+  }
+
+  // live re-validation only after the first submit attempt, so errors
+  // clear automatically the moment the input becomes valid
+  emailInput.addEventListener('input', () => { if(submittedOnce) validateEmail(); clearBanner(); });
+  passwordInput.addEventListener('input', () => { if(submittedOnce) validatePassword(); clearBanner(); });
+
+  eyeBtn.addEventListener('click', () => {
+    const isHidden = passwordInput.type === 'password';
+    passwordInput.type = isHidden ? 'text' : 'password';
+    eyeOpen.hidden = isHidden;
+    eyeClosed.hidden = !isHidden;
+    eyeBtn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+    passwordInput.focus({ preventScroll: true });
+  });
+
+  function shakeShell(){
+    loginView.classList.remove('shake');
+    // force reflow to restart animation
+    void loginView.offsetWidth;
+    loginView.classList.add('shake');
+  }
+
+  function showToast(message){
+    document.getElementById('toastMsg').textContent = message;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 4000);
+  }
+
+  toastClose.addEventListener('click', () => {
+    toast.classList.remove('show');
+    clearTimeout(toastTimer);
+  });
+
+  function resetForm(){
+    form.reset();
+    submittedOnce = false;
+    setFieldError(emailField, emailError, '');
+    setFieldError(passwordField, passwordError, '');
+    clearBanner();
+    passwordInput.type = 'password';
+    eyeOpen.hidden = false;
+    eyeClosed.hidden = true;
+    dial.classList.remove('unlocking');
+    submitBtn.classList.remove('loading');
+    submitBtn.disabled = false;
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    submittedOnce = true;
+    clearBanner();
+
+    const emailOk = validateEmail();
+    const passwordOk = validatePassword();
+
+    if(!emailOk || !passwordOk){
+      shakeShell();
+      (emailOk ? passwordInput : emailInput).focus();
+      return;
+    }
+
+    const emailVal = emailInput.value.trim();
+    const passwordVal = passwordInput.value;
+
+    if(emailVal.toLowerCase() !== DEMO_EMAIL || passwordVal !== DEMO_PASSWORD){
+      showBanner('Invalid email or password. Try the demo credentials below.');
+      shakeShell();
+      return;
+    }
+
+    // credentials correct — play the unlock sequence, then navigate
+    submitBtn.classList.add('loading');
+    submitBtn.disabled = true;
+    dial.classList.add('unlocking');
+
+    setTimeout(() => {
+      sessionUser.textContent = emailVal;
+      loginView.hidden = true;
+      successView.hidden = false;
+      showToast('Successfully Logged In!');
+    }, 550);
+  });
+
+  logoutBtn.addEventListener('click', () => {
+    successView.hidden = true;
+    loginView.hidden = false;
+    resetForm();
+    emailInput.focus();
+  });
+})();
+</script>
+</body>
+</html>
