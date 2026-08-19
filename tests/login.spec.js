@@ -19,4 +19,17 @@ test.describe('Login Page Tests', () => {
     await expect(page.getByText(/password.*required/i)).toBeVisible();
   });
 
+  test('Password Show and Hide', async ({ page }) => {
+    await page.goto('');
+
+    const passwordInput = page.locator('#password');
+    const eyeButton = page.locator('#eyeBtn');
+
+    await passwordInput.fill('Passw0rd1');
+    await expect(passwordInput).toHaveAttribute('type', 'password'); // هل بالأصل مخفي
+    await eyeButton.click(); // أظهرناه
+    await expect(passwordInput).toHaveAttribute('type', 'text');
+    await eyeButton.click(); // أخفيناه
+    await expect(passwordInput).toHaveAttribute('type', 'password');
+    });
 });
